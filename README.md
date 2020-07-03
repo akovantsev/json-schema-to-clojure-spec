@@ -81,3 +81,129 @@ TBA
   (ss/make schema ss/default-opts))
 ```
 In this particular example, schema vega entity names are (probably) generated from type script class signatures, hence custom `keywordyze` function.  
+
+## SETTINGS
+TBA. For now, see tests and source.
+
+## EXAMPLES
+Here's a few, but see more in REPL, by evaling things in test namespace.
+ * printing is slightly manually edited for readability:
+```clojure
+(s/def :user/root ,,,
+;; instead of:
+(s/def 
+:user/root ,,,
+``` 
+
+```clojure
+(do-printer
+  (convert test-opts
+    {"type"            "array"
+     "minItems"        5
+     "maxItems"        7
+     "items"           [{"enum" ["x" "y" "z" nil]}
+                        {"type"             "number"
+                         "exclusiveMaximum" 10}]
+     "additionalItems" {"type" "string"
+                        "enum" ["a" "b" nil]}}))
+;;=>
+(do
+ (def root-items-i0 #{nil "z" "x" "y"})
+ (def root-items-additionalItem #{nil "a" "b"})
+ (defn <10? [x] (< x 10))
+ (defn max-count [coll-spec nmax] (fn max-count [conformed] (>= nmax (count (s/unform coll-spec conformed)))))
+ (defn min-count [coll-spec nmin] (fn min-count [conformed] (<= nmin (count (s/unform coll-spec conformed)))))
+ (s/def :user/root (s/and :user.root/items (min-count :user.root/items 5) (max-count :user.root/items 7)))
+ (s/def :user.root/items
+  (s/cat :i0 :user.root.items/i0 :i1 :user.root.items/i1 :& (s/* :user.root.items/additionalItem)))
+ (s/def :user.root.items/additionalItem (s/nonconforming (s/or :enum root-items-additionalItem :nil nil?)))
+ (s/def :user.root.items/i0 (s/nonconforming (s/or :enum root-items-i0 :nil nil?)))
+ (s/def :user.root.items/i1 (s/and number? <10?)))
+```
+
+```clojure
+(do
+ (defn <20? [x] (< x 20))
+ (defn >=10? [x] (>= x 10))
+ (defn mod2over5? [x] (zero? (mod x 2/5)))
+ (defn mod3over5? [x] (zero? (mod x 3/5)))
+ (s/def :user/root (s/or :i0 :user.root/i0 :i1 :user.root/i1 :i2 int?))
+ (s/def :user.root/i0 (s/and int? >=10? <20? mod2over5?))
+ (s/def :user.root/i1 (s/and int? mod3over5?)))
+(do-printer
+  (convert test-opts
+    {"type"                 "object",
+     "additionalProperties" {"type" "string"},
+     "minProperties"        1,
+     "maxProperties"        4,
+     "properties"           {"numbers"     {"type"            "array",
+                                            "items"           [{"type"       "object",
+                                                                "properties" {"foo" {"type" "number"},
+                                                                              "bar" {"type" "string", "enum" ["x" "y" "z"]}}}
+                                                               {"type" "number"}],
+                                            "additionalItems" {"type" "string", "enum" ["a" "b"]}},
+                             "street_name" {"type" "string"},
+                             "street_type" {"type" "string", "enum" ["Street" "Avenue" "Boulevard"]}}}))
+;;=>
+(do
+ (def root-numbers-items-i0-bar #{"z" "x" "y"})
+ (def root-numbers-items-additionalItem #{"a" "b"})
+ (def root-street_type #{"Street" "Boulevard" "Avenue"})
+ (defn map-difference [conformed-map s-keys-spec]
+  (let [{:keys [opt-un req-un req opt]} (->> s-keys-spec s/form rest (apply hash-map))
+        simple-keys (->> (concat opt-un req-un) (map name) (map keyword))]
+   (as-> conformed-map $ (s/unform s-keys-spec $) (apply dissoc $ (concat simple-keys req opt)))))
+ (defn max-count [coll-spec nmax] (fn max-count [conformed] (>= nmax (count (s/unform coll-spec conformed)))))
+ (defn min-count [coll-spec nmin] (fn min-count [conformed] (<= nmin (count (s/unform coll-spec conformed)))))
+ (s/def :user/root
+  (s/and
+   :user.root/base-props
+   (min-count :user.root/base-props 1)
+   (max-count :user.root/base-props 4)
+   (fn extra-vals [conformed-map]
+    (s/valid? :user.root/extra-props (map-difference conformed-map :user.root/base-props)))))
+ (s/def :user.root/base-props (s/keys :opt-un [:user.root/numbers :user.root/street_name :user.root/street_type]))
+ (s/def :user.root/extra-props (s/map-of keyword? string?))
+ (s/def :user.root/numbers
+  (s/cat :i0 :user.root.numbers.items/i0 :i1 number? :& (s/* root-numbers-items-additionalItem)))
+ (s/def :user.root.numbers.items/i0 (s/keys :opt-un [:user.root.numbers.items.i0/bar :user.root.numbers.items.i0/foo]))
+ (s/def :user.root.numbers.items.i0/bar root-numbers-items-i0-bar)
+ (s/def :user.root.numbers.items.i0/foo number?)
+ (s/def :user.root/street_name string?)
+ (s/def :user.root/street_type root-street_type))
+```
+
+
+```clojure
+(do-printer
+  (convert test-opts
+    {"oneOf" [{"$ref" "$/refs/a"}
+              {"$ref" "$/refs/b"}
+              {"$ref" "$/refs/c"}]
+     "refs"  {"a" {"enum" ["a" nil 2]}
+              "b" {"enum" ["b" nil 5]}
+              "c" {"type" "object"
+                   "properties" {"foo" {"type" "integer" "multipleOf" 3.5}
+                                 "bar" {"type" "string" "minLength" 10}}
+                   "required" ["bar"]}}}))
+;;=>
+(do
+ (def a #{nil "a" 2})
+ (def b #{nil "b" 5})
+ (defn
+  all-invalid?
+  [unform-spec specs]
+  (fn [conformed-x] (let [x (s/unform unform-spec conformed-x)] (not-any? (fn [spec] (s/valid? spec x)) specs))))
+ (defn min-count [coll-spec nmin] (fn min-count [conformed] (<= nmin (count (s/unform coll-spec conformed)))))
+ (defn mod3-5? [x] (zero? (mod x 3.5)))
+ (s/def :user.refs/a (s/nonconforming (s/or :enum a :nil nil?)))
+ (s/def :user.refs/b (s/nonconforming (s/or :enum b :nil nil?)))
+ (s/def :user.refs/c (s/keys :req-un [:user.refs.c/bar] :opt-un [:user.refs.c/foo]))
+ (s/def :user.refs.c/bar (s/and string? (min-count string? 10)))
+ (s/def :user.refs.c/foo (s/and int? mod3-5?))
+ (s/def :user/root
+  (s/or
+   :i0 (s/and :user.refs/a (all-invalid? :user.refs/a [:user.refs/b :user.refs/c]))
+   :i1 (s/and :user.refs/b (all-invalid? :user.refs/b [:user.refs/a :user.refs/c]))
+   :i2 (s/and :user.refs/c (all-invalid? :user.refs/c [:user.refs/a :user.refs/b])))))
+```

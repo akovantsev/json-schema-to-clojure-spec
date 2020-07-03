@@ -224,9 +224,21 @@
               {"type" "number", "exclusiveMaximum" 2}
               {"type" "number", "exclusiveMaximum" 3}]}))
 
+(do-printer
+  (convert test-opts
+    {"oneOf" [{"$ref" "$/refs/a"}
+              {"$ref" "$/refs/b"}
+              {"$ref" "$/refs/c"}]
+     "refs"  {"a" {"enum" ["a" nil 2]}  ;;fixme: enum name is too short in
+              "b" {"enum" ["b" nil 5]}  ;;review: literal json objects in the enums are allowed
+              "c" {"type" "object"
+                   "properties" {"foo" {"type" "integer" "multipleOf" 3.5}
+                                 "bar" {"type" "string" "minLength" 10}}
+                   "required" ["bar"]}}}))
 
 
-;#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_
+
+#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_
 (defn keywordize
   ([x] (keywordize nil x))
   ([ns x]
@@ -265,14 +277,6 @@ schema
     (do-printer
       (convert test-opts2 schema))))
 
-(do-printer
-  (convert test-opts2
-    {:oneOf [{:$ref "$/refs/a"}
-             {:$ref "$/refs/b"}
-             {:$ref "$/refs/c"}]
-     :refs {:a {:enum ["a" nil]}
-            :b {:enum ["b" nil]}
-            :c {:enum ["c" nil]}}}))
 
 ;; todo:
 ;      "properties": {
