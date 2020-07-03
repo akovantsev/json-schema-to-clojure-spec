@@ -1,8 +1,9 @@
-(ns com.akovantsev.json-schema-to-clojure-spec.v7-to-v1
+(ns com.akovantsev.json-schema-to-clojure-spec.v7-to-v1-test
   (:require
-   [com.akovantsev.json-schema-to-clojure-spec.v7-to-v1 :as ss]
+   [com.akovantsev.json-schema-to-clojure-spec.v7-to-v1 :as x]
    [cheshire.core :as json]
-   [clojure.walk :as walk]))
+   [clojure.walk :as walk]
+   [clojure.string :as str]))
 
 (set! *print-namespace-maps* false) ;;fixme remove
 
@@ -13,29 +14,31 @@
     #(if (keyword? %) (name %) %)
     m))
 
-
+(def do-printer x/do-printer)
+(def convert x/convert)
+(def make-spec x/make-spec)
 
 (def test-opts
-  (merge default-opts
-    {::json-key-fn identity                                 ;keywordize
-     ::root-ns     "user"
-     ::path        ["user" "root"]}))
+  (merge x/default-opts
+    {::x/json-key-fn identity                                 ;keywordize
+     ::x/root-ns     "user"
+     ::x/path        ["user" "root"]}))
 
 
 
 (defn result [m]
-  {:todo      (m ::todo)
-   :functions (m ::functions)
-   :enums     (m ::enums)
-   :registry  (m ::registry)
-   :form      (m ::form)})
+  {:todo      (m ::x/todo)
+   :functions (m ::x/functions)
+   :enums     (m ::x/enums)
+   :registry  (m ::x/registry)
+   :form      (m ::x/form)})
 
 
-(assert (= (alias-resolution-batches {:d :a :b 1 :a :b :c :a}) [{:b 1} {:a :b} {:c :a :d :a}]))
-(assert (= (alias-resolution-batches {1 0 2 1 3 1 4 3}) [{1 0} {2 1, 3 1} {4 3}]))
+(assert (= (x/alias-resolution-batches {:d :a :b 1 :a :b :c :a}) [{:b 1} {:a :b} {:c :a :d :a}]))
+(assert (= (x/alias-resolution-batches {1 0 2 1 3 1 4 3}) [{1 0} {2 1, 3 1} {4 3}]))
 
-(assert (= (curr-spec-name (navigate-to-ref test-opts "#/definitions/UnitSpec")) :user.definitions/UnitSpec))
-
+(assert (= (x/curr-spec-name (x/navigate-to-ref test-opts "#/definitions/UnitSpec")) :user.definitions/UnitSpec))
+(x/navigate-to-ref test-opts "#/definitions/UnitSpec")
 
 (do-printer (make-spec test-opts {}))
 (do-printer (make-spec test-opts true))
@@ -160,7 +163,7 @@
                                            {"type" "integer", "multipleOf" 3/5}
                                            {"type" "integer"}]}))
 
-(do-printer (-num-spec test-opts {"type" "integer", "multipleOf" 2, "minimum" 10, "exclusiveMaximum" 20} 'int?))
+(do-printer (x/-num-spec test-opts {"type" "integer", "multipleOf" 2, "minimum" 10, "exclusiveMaximum" 20} 'int?))
 
 
 (do-printer (make-spec test-opts {"$ref" "#/definitions/LayerSpec"}))
@@ -175,14 +178,9 @@
                                  {"$ref" "#/definitions/UnitSpec"}]}}))
 
 
-(assert (= (split-vec 3 [0 1 2 3 4]) [3 [0 1 2 4]]))
+(assert (= (x/split-vec 3 [0 1 2 3 4]) [3 [0 1 2 4]]))
 
 
-
-;(->> vega-json :definitions :Transform make)
-;(->> vega-json :definitions :Color make)
-;(->> vega-json :definitions :ColorName make)
-;(->> vega-json :definitions :UtcMultiTimeUnit make) ; eval s/exercise (map first))
 
 
 
@@ -193,7 +191,7 @@
   (convert test-opts {"type" "array", "minItems" 5, "maxItems" 10}))
 
 
-;#_
+
 (do-printer
   (make-spec test-opts
     {"type"                 "object",
@@ -228,7 +226,7 @@
 
 
 
-#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_
+;#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_
 (defn keywordize
   ([x] (keywordize nil x))
   ([ns x]
@@ -254,14 +252,14 @@ schema
 (-> schema :defs keys)
 (-> schema (get "definitions") keys)
 
-(def test-opts2 (assoc test-opts ::schema schema ::json-key-fn keywordize))
+(def test-opts2 (assoc test-opts ::x/schema schema ::x/json-key-fn keywordize))
 
-(get-ref-schema test-opts2 "#/defs/scope")
+(x/get-ref-schema test-opts2 "#/defs/scope")
 
 (result (make-spec test-opts2 schema))
 (result (make-spec test-opts2 {:type "object"}))
 
-(schema-type test-opts2 {:type "object"})
+(x/schema-type test-opts2 {:type "object"})
 (spit "/tmp/2.cljc"
   (apply list
     (do-printer
@@ -286,7 +284,7 @@ schema
 ;;        "config": {
 ;          "type": "object"
 ;        },
-
-#_*e
-#_(eval *1)
-#_(-> :user/root (s/exercise 10) (->> (map first)))
+;
+;#_*e
+;#_(eval *1)
+;#_(-> :user/root (s/exercise 10) (->> (map first)))
