@@ -175,6 +175,8 @@ Here's a few, but see more in REPL, by evaling things in test namespace.
 
 
 ```clojure
+(require '[clojure.spec.alpha :as s])
+
 (do-printer
   (convert test-opts
     {"oneOf" [{"$ref" "$/refs/a"}
@@ -206,4 +208,20 @@ Here's a few, but see more in REPL, by evaling things in test namespace.
    :i0 (s/and :user.refs/a (all-invalid? :user.refs/a [:user.refs/b :user.refs/c]))
    :i1 (s/and :user.refs/b (all-invalid? :user.refs/b [:user.refs/a :user.refs/c]))
    :i2 (s/and :user.refs/c (all-invalid? :user.refs/c [:user.refs/a :user.refs/b])))))
+
+(eval *1)
+;;=> :user/root
+
+(map first (s/exercise :user/root))
+;;=>
+("b"
+ "a"
+ "a"
+ {:bar "D9Z3xXz3hw5X4H"}
+ 2
+ {:foo 0, :bar "HZXuPggHb1"}
+ "b"
+ {:foo 14, :bar "iMP6EP3u9m"}
+ 5
+ {:foo -14, :bar "luWNw7nIn6o"})
 ```
