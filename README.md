@@ -225,3 +225,42 @@ Here's a few, but see more in REPL, by evaling things in test namespace.
  5
  {:foo -14, :bar "luWNw7nIn6o"})
 ```
+
+```clojure
+(do-printer
+  (make-spec test-opts
+    {"anyOf" [{"type" "number", "exclusiveMaximum" ##Inf}
+              {"type" "number", "minimum" 2.4}
+              {"const" "foo"}
+              {"const" {"foo" "bar"}}
+              {"const" nil}
+              {"enum" [nil false "baz"]}
+              {"const" false}
+              {"type" "number", "exclusiveMaximum" 3}]}))
+;;=>
+(do
+ (def root-i2 #{"foo"})
+ (def root-i3 #{{"foo" "bar"}})
+ (def root-i4 #{nil})
+ (def root-i5 #{nil "baz" false})
+ (def root-i6 #{false})
+ (defn <3? [x] (< x 3))
+ (defn <Infinity? [x] (< x ##Inf))
+ (defn >=2-4? [x] (>= x 2.4))
+ (s/def :user/root
+  (s/or
+   :i0 :user.root/i0
+   :i1 :user.root/i1
+   :i2 root-i2
+   :i3 root-i3
+   :i4 :user.root/i4
+   :i5 :user.root/i5
+   :i6 :user.root/i6
+   :i7 :user.root/i7))
+ (s/def :user.root/i0 (s/and number? <Infinity?))
+ (s/def :user.root/i1 (s/and number? >=2-4??))
+ (s/def :user.root/i4 (s/nonconforming (s/or :enum root-i4 :nil nil?)))
+ (s/def :user.root/i5 (s/nonconforming (s/or :enum root-i5 :false false? :nil nil?)))
+ (s/def :user.root/i6 (s/nonconforming (s/or :enum root-i6 :false false?)))
+ (s/def :user.root/i7 (s/and number? <3?)))
+```

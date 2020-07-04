@@ -487,6 +487,13 @@
       (-merge-state state2)
       (-set-form form))))
 
+(defmethod make-spec ::const [state schema]
+  (let [kf    (::json-key-fn state)
+        const (-> "const" kf schema)]
+    (make-spec state
+      (-> schema
+        (dissoc (kf "const"))
+        (assoc (kf "enum") [const])))))
 
 
 (defmethod make-spec ::enum [state m]

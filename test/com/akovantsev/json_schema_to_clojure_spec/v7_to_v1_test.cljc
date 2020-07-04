@@ -221,7 +221,12 @@
 (do-printer
   (make-spec test-opts
     {"anyOf" [{"type" "number", "exclusiveMaximum" ##Inf}
-              {"type" "number", "exclusiveMaximum" 2}
+              {"type" "number", "minimum" 2.4}
+              {"const" "foo"}
+              {"const" {"foo" "bar"}}
+              {"const" nil}
+              {"enum" [nil false "baz"]}
+              {"const" false}
               {"type" "number", "exclusiveMaximum" 3}]}))
 
 (do-printer
@@ -236,7 +241,10 @@
                                  "bar" {"type" "string" "minLength" 10}}
                    "required" ["bar"]}}}))
 
-
+(do-printer (convert test-opts {"const" true}))
+(do-printer (convert test-opts {"const" false}))
+(do-printer (convert test-opts {"const" nil}))
+(do-printer (convert test-opts {"const" "foo"}))
 
 #_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_
 (defn keywordize
