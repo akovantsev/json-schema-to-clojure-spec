@@ -122,14 +122,6 @@ Here's a few, but see more in REPL, by evaling things in test namespace.
 ```
 
 ```clojure
-(do
- (defn <20? [x] (< x 20))
- (defn >=10? [x] (>= x 10))
- (defn mod2over5? [x] (zero? (mod x 2/5)))
- (defn mod3over5? [x] (zero? (mod x 3/5)))
- (s/def :user/root (s/or :i0 :user.root/i0 :i1 :user.root/i1 :i2 int?))
- (s/def :user.root/i0 (s/and int? >=10? <20? mod2over5?))
- (s/def :user.root/i1 (s/and int? mod3over5?)))
 (do-printer
   (convert test-opts
     {"type"                 "object",
