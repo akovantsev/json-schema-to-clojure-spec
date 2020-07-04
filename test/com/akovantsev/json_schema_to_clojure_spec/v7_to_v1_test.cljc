@@ -289,6 +289,6 @@ schema
 ;          "type": "object"
 ;        },
 ;
-;#_*e
-;#_(eval *1)
-;#_(-> :user/root (s/exercise 10) (->> (map first)))
+#_*e
+#_(eval *1)
+#_(-> :user/root (s/exercise 10) (->> (map first)))

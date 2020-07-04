@@ -384,7 +384,15 @@
       (-merge-states states)
       (-set-form form))))
 
+(def min-len-fn-form
+  '(defn min-len [nmin]
+     (fn min-len [x]
+       (<= nmin (count x)))))
 
+(def max-len-fn-form
+  '(defn max-len [nmin]
+     (fn max-len [x]
+       (>= nmax (count x)))))
 
 (def min-fn-form
   '(defn min-count [coll-spec nmin]
@@ -414,8 +422,8 @@
         minLength (-> "minLength" kf m)
         maxLength (-> "maxLength" kf m)
         spec      'string?
-        functions (->> [(when minLength min-fn-form)
-                        (when maxLength max-fn-form)]
+        functions (->> [(when minLength min-len-fn-form)
+                        (when maxLength max-len-fn-form)]
                     (remove nil?)
                     (set))]
     (-> state
@@ -423,8 +431,8 @@
       (-set-form
         (-make-and
           [spec
-           (when minLength (call-form min-fn-form spec minLength))
-           (when maxLength (call-form max-fn-form spec maxLength))])))))
+           (when minLength (call-form min-len-fn-form minLength))
+           (when maxLength (call-form max-len-fn-form maxLength))])))))
 
 
 

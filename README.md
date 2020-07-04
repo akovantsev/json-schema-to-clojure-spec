@@ -87,7 +87,7 @@ TBA. For now, see tests and source.
 
 ## EXAMPLES
 Here's a few, but see more in REPL, by evaling things in test namespace.
- * printing is slightly manually edited for readability:
+ * printing in these examples is slightly edited for readability, e.g.:
 ```clojure
 (s/def :user/root ,,,
 ;; instead of:
@@ -192,16 +192,16 @@ Here's a few, but see more in REPL, by evaling things in test namespace.
 (do
  (def a #{nil "a" 2})
  (def b #{nil "b" 5})
- (defn
-  all-invalid?
-  [unform-spec specs]
-  (fn [conformed-x] (let [x (s/unform unform-spec conformed-x)] (not-any? (fn [spec] (s/valid? spec x)) specs))))
- (defn min-count [coll-spec nmin] (fn min-count [conformed] (<= nmin (count (s/unform coll-spec conformed)))))
+ (defn all-invalid? [unform-spec specs]
+  (fn [conformed-x]
+   (let [x (s/unform unform-spec conformed-x)]
+    (not-any? (fn [spec] (s/valid? spec x)) specs))))
+ (defn min-len [nmin] (fn min-len [x] (<= nmin (count x))))
  (defn mod3-5? [x] (zero? (mod x 3.5)))
  (s/def :user.refs/a (s/nonconforming (s/or :enum a :nil nil?)))
  (s/def :user.refs/b (s/nonconforming (s/or :enum b :nil nil?)))
  (s/def :user.refs/c (s/keys :req-un [:user.refs.c/bar] :opt-un [:user.refs.c/foo]))
- (s/def :user.refs.c/bar (s/and string? (min-count string? 10)))
+ (s/def :user.refs.c/bar (s/and string? (min-len 10)))
  (s/def :user.refs.c/foo (s/and int? mod3-5?))
  (s/def :user/root
   (s/or
