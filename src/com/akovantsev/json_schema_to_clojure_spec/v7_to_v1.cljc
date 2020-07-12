@@ -427,7 +427,7 @@
                     (remove nil?)
                     (set))]
     (-> state
-      (assoc ::functions functions)
+      (update ::functions into functions)
       (-set-form
         (-make-and
           [spec
@@ -467,7 +467,7 @@
         syms    (map second forms)
         form    (-make-and (cons sym syms))]
     (-> state
-      (assoc ::functions (set forms))
+      (update ::functions into (set forms))
       (-set-form form))))
 
 
@@ -748,7 +748,6 @@
                        (when minProperties (call-form min-fn-form base-spec minProperties))
                        (when maxProperties (call-form max-fn-form base-spec maxProperties))
                        (::form extra-state)])
-
         state       (-> state
                       (-merge-states prop-states)
                       (-merge-state extra-state)
@@ -763,9 +762,6 @@
         (-set-form form))
       (-> state
         (-set-form base-form)))))
-
-      ;(-set-form form))))
-
 
 
 
